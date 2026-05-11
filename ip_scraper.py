@@ -14,8 +14,6 @@ from pathlib import Path
 from github import Github
 
 # ── Config ────────────────────────────────────────────────────────────────────
-GITHUB_TOKEN  = os.environ["GITHUB_TOKEN"]
-GITHUB_REPO   = os.environ["GITHUB_REPO"]
 ABUSEIPDB_KEY = os.environ.get("ABUSEIPDB_KEY", "")
 OUTPUT_FILE   = "blocklist.txt"
 
@@ -128,31 +126,6 @@ def build_blocklist(all_ips: set[str]) -> str:
     return header + "\n".join(sorted_ips) + "\n"
 
 
-# ── GitHub push ───────────────────────────────────────────────────────────────
-def push_to_github(content: str) -> None:
-    """Create or update blocklist.txt in the GitHub repo."""
-    g    = Github(GITHUB_TOKEN)
-    repo = g.get_repo(GITHUB_REPO)
-    now  = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    msg  = f"chore: update blocklist — {now}"
-
-    try:
-        existing = repo.get_contents(OUTPUT_FILE)
-        repo.update_file(
-            path=OUTPUT_FILE,
-            message=msg,
-            content=content,
-            sha=existing.sha,
-        )
-        print(f"  GitHub: updated {OUTPUT_FILE}")
-    except Exception:
-        repo.create_file(
-            path=OUTPUT_FILE,
-            message=msg,
-            content=content,
-        )
-        print(f"  GitHub: created {OUTPUT_FILE}")
-
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def run():
@@ -172,7 +145,6 @@ def run():
     print(f"\n  Total unique IPs after dedup : {len(all_ips)}")
 
     content = build_blocklist(all_ips)
-
     # Write locally — workflow git step handles the push
     with open("blocklist.txt", "w") as f:
         f.write(content)
