@@ -2,12 +2,13 @@ name: Update blocklist
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
-  workflow_dispatch:
+    - cron: "0 */6 * * *"    # every 6 hours
+  workflow_dispatch:           # manual trigger
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 10        # kill if stuck
     permissions:
       contents: write
 
@@ -19,17 +20,18 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests PyGithub schedule
+        run: pip install requests PyGithub
 
       - name: Run scraper
         env:
-          GITHUB_TOKEN: ${{ secrets.BLOCKLIST_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
-        run: python ip_scraper.py --once
+          GITHUB_TOKEN:  ${{ secrets.BLOCKLIST_TOKEN }}
+          GITHUB_REPO:   ${{ github.repository }}
+          ABUSEIPDB_KEY: ${{ secrets.ABUSEIPDB_KEY }}
+        run: python ip_scraper.py
 
       - name: Commit blocklist
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add blocklist.txt
           git diff --staged --quiet || git commit -m "chore: update blocklist [skip ci]"
