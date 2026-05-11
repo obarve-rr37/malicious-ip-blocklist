@@ -172,7 +172,11 @@ def run():
     print(f"\n  Total unique IPs after dedup : {len(all_ips)}")
 
     content = build_blocklist(all_ips)
-    push_to_github(content)
+
+    # Write locally — workflow git step handles the push
+    with open("blocklist.txt", "w") as f:
+        f.write(content)
+    print(f"  Written to blocklist.txt")
 
     elapsed = (datetime.now(timezone.utc) - start).seconds
     print(f"  Done in {elapsed}s\n")
